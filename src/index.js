@@ -30,8 +30,27 @@ client.once("ready", async () => {
 
 // Interações
 client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+  const embedModal = require("./panels/embedModal");
 
+  // BOTÕES
+  if (interaction.isButton()) {
+    if (interaction.customId === "open_embed_modal") {
+      return embedModal.execute(interaction);
+    }
+  }
+
+  // SLASH COMMANDS
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
+
+    try {
+      await command.execute(interaction);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+});
   const command = client.commands.get(interaction.commandName);
   if (!command) return;
 
