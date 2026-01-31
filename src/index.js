@@ -49,6 +49,7 @@ client.on("interactionCreate", async (interaction) => {
       await command.execute(interaction);
     } catch (err) {
       console.error(err);
+
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "❌ Erro ao executar o comando.",
@@ -59,4 +60,5 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// LOGIN
 client.login(process.env.BOT_TOKEN);
