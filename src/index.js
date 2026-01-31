@@ -29,36 +29,38 @@ client.once("ready", async () => {
 });
 
 // Interações
-client.on("interactionCreate", async (interaction) => {
-  const embedModal = require("./panels/embedModal");
+client.on("interactionCreate", async interaction => {
+  try {
 
-  // BOTÕES
-  if (interaction.isButton()) {
-    if (interaction.customId === "open_embed_modal") {
-      return embedModal.execute(interaction);
+    // SLASH COMMANDS
+    if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
+      return await command.execute(interaction);
     }
-    return;
-  }
 
-  // SLASH COMMANDS
-  if (interaction.isChatInputCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+    // BOTÕES
+    if (interaction.isButton()) {
+      const button = client.buttons.get(interaction.customId);
+      if (!button) return;
+      return await button.execute(interaction);
+    }
 
-    try {
-      await command.execute(interaction);
-    } catch (err) {
-      console.error(err);
+    // MODAIS
+    if (interaction.isModalSubmit()) {
+      const modal = client.modals.get(interaction.customId);
+      if (!modal) return;
+      return await modal.execute(interaction);
+    }
 
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: "❌ Erro ao executar o comando.",
-          ephemeral: true,
-        });
-      }
+  } catch (err) {
+    console.error(err);
+    if (interaction.replied || interaction.deferred) {
+      interaction.followUp({ content: "❌ Erro interno", ephemeral: true });
+    } else {
+      interaction.reply({ content: "❌ Erro interno", ephemeral: true });
     }
   }
 });
-
 // LOGIN
 client.login(process.env.BOT_TOKEN);
