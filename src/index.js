@@ -29,7 +29,7 @@ client.once("ready", async () => {
 });
 
 // Interações
-client.on("interactionCreate", async interaction => {
+client.on("interactionCreate", async (interaction) => {
   const embedModal = require("./panels/embedModal");
 
   // BOTÕES
@@ -37,6 +37,7 @@ client.on("interactionCreate", async interaction => {
     if (interaction.customId === "open_embed_modal") {
       return embedModal.execute(interaction);
     }
+    return;
   }
 
   // SLASH COMMANDS
@@ -48,17 +49,13 @@ client.on("interactionCreate", async interaction => {
       await command.execute(interaction);
     } catch (err) {
       console.error(err);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "❌ Erro ao executar o comando.",
+          ephemeral: true,
+        });
+      }
     }
-  }
-});
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-
-  try {
-    await command.execute(interaction);
-  } catch (err) {
-    console.error(err);
-    interaction.reply({ content: "❌ Erro ao executar comando", ephemeral: true });
   }
 });
 
