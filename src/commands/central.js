@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require("discord.js");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("central")
-    .setDescription("Abre a central de atendimento"),
+    .setDescription("Abre painel de controle "),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
