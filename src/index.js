@@ -1,66 +1,46 @@
-require("dotenv").config();
-const { Client, GatewayIntentBits, Collection, REST, Routes } = require("discord.js");
+const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
+// 👇 ISSO AQUI É O MAIS IMPORTANTE
 client.commands = new Collection();
 
-// Carregar comandos
-const central = require("./commands/central");
-client.commands.set(central.data.name, central);
+// 👇 CARREGAR COMANDOS
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
 
-// Registrar slash commands
-client.once("ready", async () => {
-  console.log(`🤖 Logado como ${client.user.tag}`);
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
 
-  const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-
-  try {
-    await rest.put(
-      Routes.applicationCommands(client.user.id),
-      { body: [central.data.toJSON()] }
-    );
-    console.log("✅ Comando /central registrado");
-  } catch (err) {
-    console.error("Erro ao registrar comandos:", err);
+  if (command.data && command.execute) {
+    client.commands.set(command.data.name, command);
   }
+}
+
+client.once("ready", () => {
+  console.log(`✅ Bot online como ${client.user.tag}`);
 });
 
-// Interações
+// 👇 INTERACTIONS
 client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
+
   try {
-
-    // SLASH COMMANDS
-    if (interaction.isChatInputCommand()) {
-      const command = client.commands.get(interaction.commandName);
-      if (!command) return;
-      return await command.execute(interaction);
-    }
-
-    // BOTÕES
-    if (interaction.isButton()) {
-      const button = client.buttons.get(interaction.customId);
-      if (!button) return;
-      return await button.execute(interaction);
-    }
-
-    // MODAIS
-    if (interaction.isModalSubmit()) {
-      const modal = client.modals.get(interaction.customId);
-      if (!modal) return;
-      return await modal.execute(interaction);
-    }
-
+    await command.execute(interaction);
   } catch (err) {
     console.error(err);
-    if (interaction.replied || interaction.deferred) {
-      interaction.followUp({ content: "❌ Erro interno", ephemeral: true });
-    } else {
-      interaction.reply({ content: "❌ Erro interno", ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: "Erro ao executar comando.", ephemeral: true });
     }
   }
 });
-// LOGIN
-client.login(process.env.BOT_TOKEN);
+
+client.login(process.env.TOKEN);
