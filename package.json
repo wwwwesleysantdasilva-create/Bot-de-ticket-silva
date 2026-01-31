@@ -1,0 +1,14 @@
+{
+  "name": "bot-de-ticket-silva",
+  "version": "1.0.0",
+  "description": "Bot de tickets totalmente configurável",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
+  }
+}
